@@ -1,0 +1,41 @@
+---
+version: "3.2"
+
+services:
+  env-reporting-api:
+    container_name: env-reporting-api
+    build: .
+    ports:
+      - 3030:3030
+    expose:
+      - 3030
+    environment:
+      - INFLUX_URL=http://influxdb:8086
+      - INFLUX_TOKEN=avtkEyGx6U7sotct9aRuwEIxii5sDGFeRqwylT4-aoQcZXCIrsWYXuFjop3m3RwKJuFjF99EqKoxukocYi-_cg==
+      - INFLUX_ORG=orgy
+      - INFLUX_BUCKET=bucky
+  influxdb:
+    container_name: influxdb
+    image: influxdb:2.7-alpine
+    volumes:
+      - $PWD/data/influxdb:/var/lib/influxdb2
+    ports:
+      - 8086:8086
+    expose:
+      - 3030
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=app
+      - DOCKER_INFLUXDB_INIT_PASSWORD=apppassword
+      - DOCKER_INFLUXDB_INIT_ORG=orgy
+      - DOCKER_INFLUXDB_INIT_BUCKET=bucky
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=avtkEyGx6U7sotct9aRuwEIxii5sDGFeRqwylT4-aoQcZXCIrsWYXuFjop3m3RwKJuFjF99EqKoxukocYi-_cg==
+  grafana:
+    container_name: grafana
+    image: grafana/grafana-oss
+    volumes:
+      - $PWD/data/grafana:/var/lib/grafana
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
