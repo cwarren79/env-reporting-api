@@ -1,4 +1,2 @@
-INFLUX_URL=http://localhost:8086
-INFLUX_TOKEN=avtkEyGx6U7sotct9aRuwEIxii5sDGFeRqwylT4-aoQcZXCIrsWYXuFjop3m3RwKJuFjF99EqKoxukocYi-_cg==
-INFLUX_ORG=orgy
-INFLUX_BUCKET=bucky
+INFLUX_HOST=localhost
+INFLUX_DATABASE=db

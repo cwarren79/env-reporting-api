@@ -1,12 +1,49 @@
 import express from 'express';
-import {InfluxDB, Point} from '@influxdata/influxdb-client'
+const influx = require('influx');
 
-const url = process.env.INFLUX_URL
-const token = process.env.INFLUX_TOKEN
-const org = process.env.INFLUX_ORG
-const bucket = process.env.INFLUX_BUCKET
+const db = process.env.INFLUX_DB
+const host = process.env.INFLUX_HOST
 
-const influxDB = new InfluxDB({url, token});
+const influxDB = new influx.InfluxDB({
+  host: host,
+  port: 8086,
+  database: db,
+  schema: [
+    {
+      measurement: 'temperature',
+      fields: {
+        temperature: influx.FieldType.INTEGER
+      },
+      tags: [
+        'sensor_id'
+      ]
+    },
+    {
+      measurement: 'humidity',
+      fields: {
+        humidity: influx.FieldType.INTEGER
+      },
+      tags: [
+        'sensor_id'
+      ]
+    },
+  ]
+})
+
+// influx.getDatabaseNames()
+//   .then(names => {
+//     if (!names.includes('express_response_db')) {
+//       return influx.createDatabase('express_response_db');
+//     }
+//   })
+//   .then(() => {
+//     http.createServer(app).listen(3000, function () {
+//       console.log('Listening on port 3000')
+//     })
+//   })
+//   .catch(err => {
+//     console.error(`Error creating Influx database!`);
+//   })
 
 const app = express();
 
@@ -36,23 +73,63 @@ app.post('/environment', (req, res) => {
     res.sendStatus(400);
     return;
   }
-  const writeApi = influxDB.getWriteApi(org, bucket);
+  // const writeApi = influxDB.getWriteApi(org, bucket);
   if ('temperature' in req.body) {
-    const temperaturePoint = new Point('temperature')
-      .tag('sensor_id', sensorTag)
-      .floatField('value', req.body.temperature)
-    writeApi.writePoint(temperaturePoint)
+    // const temperaturePoint = new Point('temperature')
+    //   .tag('sensor_id', sensorTag)
+    //   .floatField('value', req.body.temperature)
+    // writeApi.writePoint(temperaturePoint)
+    influxDB.writePoints([
+      {
+        measurement: 'temperature',
+        tags: { sensor_id: sensorTag },
+        fields: { 'temperature': req.body.temperature },
+      }
+    ]).then(() => {
+      return influxDB.query(`
+        select * from temperature
+        where sensor_id = $sensor_id
+        order by time desc
+        limit 10
+      `, {
+         placeholders: {
+           sensor_id: sensorTag
+         }
+      })
+    }).then(rows => {
+      rows.forEach(row => console.log(`temperature is ${row.temperature} C`))
+    })
   }
   if ('humidity' in req.body) {
-    const humidityPoint = new Point('humidity')
-      .tag('sensor_id', sensorTag)
-      .floatField('value', req.body.humidity)
-    writeApi.writePoint(humidityPoint)
+    // const humidityPoint = new Point('humidity')
+    //   .tag('sensor_id', sensorTag)
+    //   .floatField('value', req.body.humidity)
+    // writeApi.writePoint(humidityPoint)
+    influxDB.writePoints([
+      {
+        measurement: 'humidity',
+        tags: { sensor_id: sensorTag },
+        fields: { humidity: req.body.humidity },
+      }
+    ]).then(() => {
+      return influxDB.query(`
+        select * from humidity
+        where sensor_id = $sensor_id
+        order by time desc
+        limit 10
+      `, {
+         placeholders: {
+           sensor_id: sensorTag
+         }
+      })
+    }).then(rows => {
+      rows.forEach(row => console.log(`humidity is ${row.humidity}%`))
+    })
   }
 
-  writeApi.close().then(() => {
-    console.log('WRITE FINISHED')
-  })
+  // writeApi.close().then(() => {
+  //   console.log('WRITE FINISHED')
+  // })
 
   const responseData = {
     temperature: req.body.temperature,

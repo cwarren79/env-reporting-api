@@ -19,6 +19,15 @@ describe('/environment endpoint functionality', () => {
 			.expect(200, done)
 	});
 
+	it('responds with status code 200 when a POST request is sent with all parameters in different order', (done) => {
+		const payload = {"tags": ["sensor:1234"], "temperature": 22, "humidity": 45};
+		request(app)
+			.post('/environment')
+			.send(payload)
+			.set('Content-Type', 'application/json')
+			.expect(200, done)
+	});
+
 	it('responds with status code 200 when a POST request is sent with no humidity parameter', (done) => {
     const payload = {temperature: 22, tags: ["sensor:1234"]};
 		request(app)
