@@ -1,0 +1,25 @@
+---
+version: "3.2"
+
+services:
+  influxdb-test:
+    container_name: influxdb-test
+    image: influxdb:1.8
+    ports:
+      - 8086:8086
+    expose:
+      - 8086
+    environment:
+      - INFLUX_DB=deebee
+  influxdb-test-setup:
+    container_name: influxdb-test-setup
+    image: influxdb:1.8
+    depends_on:
+      - influxdb-test
+    restart: "no"
+    entrypoint:
+      [
+        "bash",
+        "-c",
+        "influx -host 'influxdb-test' -execute 'create database deebee'"
+      ]

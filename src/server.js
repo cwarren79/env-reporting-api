@@ -50,8 +50,8 @@ const app = express();
 app.use(express.json());
 
 app.get('/health', (req, res) => {
-	console.log('Received GET request on the path /health');
-	res.send('OK');
+  console.log('Received GET request on the path /health');
+  res.send('OK');
 });
 
 app.post('/environment', (req, res) => {
@@ -92,9 +92,9 @@ app.post('/environment', (req, res) => {
         order by time desc
         limit 10
       `, {
-         placeholders: {
-           sensor_id: sensorTag
-         }
+        placeholders: {
+          sensor_id: sensorTag
+        }
       })
     }).then(rows => {
       rows.forEach(row => console.log(`temperature is ${row.temperature} C`))
@@ -118,9 +118,9 @@ app.post('/environment', (req, res) => {
         order by time desc
         limit 10
       `, {
-         placeholders: {
-           sensor_id: sensorTag
-         }
+        placeholders: {
+          sensor_id: sensorTag
+        }
       })
     }).then(rows => {
       rows.forEach(row => console.log(`humidity is ${row.humidity}%`))
@@ -139,8 +139,8 @@ app.post('/environment', (req, res) => {
   res.send(JSON.stringify(responseData));
 });
 
-app.listen(3030, () => {
-	console.log('Express server is listening on port 3030');
+const server = app.listen(3030, () => {
+  console.log('Express server is listening on port 3030');
 });
 
-export { app };
+export { server };
