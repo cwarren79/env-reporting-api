@@ -30,20 +30,7 @@ const influxDB = new influx.InfluxDB({
   ]
 })
 
-// influx.getDatabaseNames()
-//   .then(names => {
-//     if (!names.includes('express_response_db')) {
-//       return influx.createDatabase('express_response_db');
-//     }
-//   })
-//   .then(() => {
-//     http.createServer(app).listen(3000, function () {
-//       console.log('Listening on port 3000')
-//     })
-//   })
-//   .catch(err => {
-//     console.error(`Error creating Influx database!`);
-//   })
+
 
 const app = express();
 
@@ -139,8 +126,21 @@ app.post('/environment', (req, res) => {
   res.send(JSON.stringify(responseData));
 });
 
+influxDB.getDatabaseNames()
+  .then(names => {
+    if (!names.includes(db)) {
+      return influxDB.createDatabase(db);
+    }
+  })
+  .then(() => {
+    console.log('Database exists');
+  })
+  .catch(err => {
+    console.error(`Error creating Influx database!`);
+    process.exit(1);
+  })
+
 const server = app.listen(3030, () => {
   console.log('Express server is listening on port 3030');
 });
-
 export { server };

@@ -11,15 +11,15 @@ services:
       - 8086
     environment:
       - INFLUX_DB=deebee
-  influxdb-test-setup:
-    container_name: influxdb-test-setup
-    image: influxdb:1.8
-    depends_on:
-      - influxdb-test
-    restart: "no"
-    entrypoint:
-      [
-        "bash",
-        "-c",
-        "influx -host 'influxdb-test' -execute 'create database deebee'"
-      ]
+  # influxdb-test-setup:
+  #   container_name: influxdb-test-setup
+  #   image: influxdb:1.8
+  #   depends_on:
+  #     - influxdb-test
+  #   restart: "no"
+  #   entrypoint:
+  #     [
+  #       "bash",
+  #       "-c",
+  #       "influx -host 'influxdb-test' -execute 'create database deebee'"
+  #     ]
