@@ -30,8 +30,6 @@ const influxDB = new influx.InfluxDB({
   ]
 })
 
-
-
 const app = express();
 
 app.use(express.json());
@@ -60,12 +58,7 @@ app.post('/environment', (req, res) => {
     res.sendStatus(400);
     return;
   }
-  // const writeApi = influxDB.getWriteApi(org, bucket);
   if ('temperature' in req.body) {
-    // const temperaturePoint = new Point('temperature')
-    //   .tag('sensor_id', sensorTag)
-    //   .floatField('value', req.body.temperature)
-    // writeApi.writePoint(temperaturePoint)
     influxDB.writePoints([
       {
         measurement: 'temperature',
@@ -88,10 +81,6 @@ app.post('/environment', (req, res) => {
     })
   }
   if ('humidity' in req.body) {
-    // const humidityPoint = new Point('humidity')
-    //   .tag('sensor_id', sensorTag)
-    //   .floatField('value', req.body.humidity)
-    // writeApi.writePoint(humidityPoint)
     influxDB.writePoints([
       {
         measurement: 'humidity',
@@ -113,10 +102,6 @@ app.post('/environment', (req, res) => {
       rows.forEach(row => console.log(`humidity is ${row.humidity}%`))
     })
   }
-
-  // writeApi.close().then(() => {
-  //   console.log('WRITE FINISHED')
-  // })
 
   const responseData = {
     temperature: req.body.temperature,
