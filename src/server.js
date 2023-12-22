@@ -1,10 +1,10 @@
 import express from 'express';
-const influx = require('influx');
+import { InfluxDB, FieldType } from 'influx';
 
 const db = process.env.INFLUX_DB
 const host = process.env.INFLUX_HOST
 
-const influxDB = new influx.InfluxDB({
+const influxDB = new InfluxDB({
   host: host,
   port: 8086,
   database: db,
@@ -12,7 +12,7 @@ const influxDB = new influx.InfluxDB({
     {
       measurement: 'temperature',
       fields: {
-        temperature: influx.FieldType.INTEGER
+        temperature: FieldType.INTEGER
       },
       tags: [
         'sensor_id'
@@ -21,7 +21,7 @@ const influxDB = new influx.InfluxDB({
     {
       measurement: 'humidity',
       fields: {
-        humidity: influx.FieldType.INTEGER
+        humidity: FieldType.INTEGER
       },
       tags: [
         'sensor_id'
