@@ -49,6 +49,15 @@ describe('/environment endpoint functionality', () => {
 			.expect(200, done);
 	});
 
+	it('responds with status code 400 when a POST request is sent with no temperature or humidity parameter', (done) => {
+		const payload = { tags: ["sensor:1234"] };
+		request(server)
+			.post('/environment')
+			.send(payload)
+			.set('Content-Type', 'application/json')
+			.expect(400, done)
+	});
+
 	it('responds with status code 400 when a POST request is sent with no tags parameter', (done) => {
 		const payload = { temperature: 22, humidity: 45 };
 		request(server)

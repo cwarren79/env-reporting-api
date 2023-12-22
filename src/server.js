@@ -58,6 +58,10 @@ app.post('/environment', (req, res) => {
     res.sendStatus(400);
     return;
   }
+  if (!('temperature' in req.body) && !('humidity' in req.body)) {
+    res.sendStatus(400);
+    return;
+  }
   if ('temperature' in req.body) {
     influxDB.writePoints([
       {
@@ -68,16 +72,12 @@ app.post('/environment', (req, res) => {
     ]).then(() => {
       return influxDB.query(`
         select * from temperature
-        where sensor_id = $sensor_id
+        where sensor_id = '${sensorTag}'
         order by time desc
-        limit 10
-      `, {
-        placeholders: {
-          sensor_id: sensorTag
-        }
-      })
+        limit 1
+      `)
     }).then(rows => {
-      rows.forEach(row => console.log(`temperature is ${row.temperature} C`))
+      rows.forEach(row => console.log(`DB record: temperature is ${row.temperature} C`))
     })
   }
   if ('humidity' in req.body) {
@@ -90,16 +90,12 @@ app.post('/environment', (req, res) => {
     ]).then(() => {
       return influxDB.query(`
         select * from humidity
-        where sensor_id = $sensor_id
+        where sensor_id = '${sensorTag}'
         order by time desc
-        limit 10
-      `, {
-        placeholders: {
-          sensor_id: sensorTag
-        }
-      })
+        limit 1
+      `)
     }).then(rows => {
-      rows.forEach(row => console.log(`humidity is ${row.humidity}%`))
+      rows.forEach(row => console.log(`DB record: humidity is ${row.humidity}%`))
     })
   }
 
