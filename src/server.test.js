@@ -9,14 +9,14 @@ describe('/health endpoint functionality', () => {
 	});
 });
 
-describe('/environment endpoint functionality', () => {
+describe('/dht endpoint functionality', () => {
 	after((done) => {
 		server.close(done);
 	});
 	it('responds with status code 200 when a POST request is sent with all parameters', (done) => {
 		const payload = { temperature: 22, humidity: 45, tags: ["sensor:1234"] };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(200, done);
@@ -25,7 +25,7 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 200 when a POST request is sent with all parameters in different order', (done) => {
 		const payload = { "tags": ["sensor:1234"], "temperature": 22, "humidity": 45 };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(200, done);
@@ -34,7 +34,7 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 200 when a POST request is sent with no humidity parameter', (done) => {
 		const payload = { temperature: 22, tags: ["sensor:1234"] };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(200, done);
@@ -43,7 +43,7 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 200 when a POST request is sent with no temperature parameter', (done) => {
 		const payload = { humidity: 45, tags: ["sensor:1234"] };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(200, done);
@@ -52,7 +52,7 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 400 when a POST request is sent with no temperature or humidity parameter', (done) => {
 		const payload = { tags: ["sensor:1234"] };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(400, done)
@@ -61,7 +61,7 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 400 when a POST request is sent with no tags parameter', (done) => {
 		const payload = { temperature: 22, humidity: 45 };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(400, done);
@@ -70,9 +70,24 @@ describe('/environment endpoint functionality', () => {
 	it('responds with status code 400 when the tags parameter does not contain a sensor key', (done) => {
 		const payload = { temperature: 22, humidity: 45, tags: ["somethingelse:1234"] };
 		request(server)
-			.post('/environment')
+			.post('/dht')
 			.send(payload)
 			.set('Content-Type', 'application/json')
 			.expect(400, done);
+	});
+});
+
+describe('/pms endpoint functionality', () => {
+	// after((done) => {
+	// 	server.close(done);
+	// });
+
+	it('responds with status code 200 when a POST request is sent with all parameters', (done) => {
+		const payload = { foo: "bar", tags: ["sensor:1234"] };
+		request(server)
+			.post('/pms')
+			.send(payload)
+			.set('Content-Type', 'application/json')
+			.expect(200, done);
 	});
 });

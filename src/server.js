@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
   res.send('OK');
 });
 
-app.post('/environment', (req, res) => {
+app.post('/dht', (req, res) => {
   console.log(req.body);
   console.log(`Temperature: ${req.body.temperature}`);
   console.log(`Humidity: ${req.body.humidity}`);
@@ -105,6 +105,12 @@ app.post('/environment', (req, res) => {
     sensor_id: sensorTag
   }
   res.send(JSON.stringify(responseData));
+});
+
+app.post('/pms', (req, res) => {
+  console.log(req.body);
+  console.log(`foo: ${req.body.foo}`);
+  res.send(req.body.foo);
 });
 
 influxDB.getDatabaseNames()
