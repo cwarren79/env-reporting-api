@@ -27,6 +27,31 @@ const influxDB = new InfluxDB({
         'sensor_id'
       ]
     },
+    {
+      measurement: 'pm_ug_per_m3',
+      fields: {
+        '1.0um': FieldType.INTEGER,
+        '2.5um': FieldType.INTEGER,
+        '10um': FieldType.INTEGER
+      },
+      tags: [
+        'sensor_id'
+      ]
+    },
+    {
+      measurement: 'pm_per_1l_air',
+      fields: {
+        '0.3um': FieldType.INTEGER,
+        '0.5um': FieldType.INTEGER,
+        '1.0um': FieldType.INTEGER,
+        '2.5um': FieldType.INTEGER,
+        '5.0um': FieldType.INTEGER,
+        '10um': FieldType.INTEGER
+      },
+      tags: [
+        'sensor_id'
+      ]
+    }
   ]
 })
 
@@ -109,8 +134,82 @@ app.post('/dht', (req, res) => {
 
 app.post('/pms', (req, res) => {
   console.log(req.body);
-  console.log(`foo: ${req.body.foo}`);
-  res.send(req.body.foo);
+
+  if (!('tags' in req.body)) {
+    res.sendStatus(400);
+    return;
+  }
+  console.log('Tags:');
+  let sensorTag = '';
+  req.body.tags.forEach(tag => {
+    const [tagName, tagValue] = tag.split(":");
+    console.log(`  ${tagName} => ${tagValue}`)
+    if (tagName === 'sensor') { sensorTag = tagValue; }
+  })
+  if (sensorTag === '') {
+    res.sendStatus(400);
+    return;
+  }
+  if (!('pm_ug_per_m3' in req.body) && !('pm_per_1l_air' in req.body)) {
+    res.sendStatus(400);
+    return;
+  }
+
+  if ('pm_ug_per_m3' in req.body) {
+    influxDB.writePoints([
+      {
+        measurement: 'pm_ug_per_m3',
+        tags: { sensor_id: sensorTag },
+        fields: {
+          '1.0um': req.body.pm_ug_per_m3['1.0um'],
+          '2.5um': req.body.pm_ug_per_m3['2.5um'],
+          '10um': req.body.pm_ug_per_m3['10um'],
+        },
+      }
+    ]).then(() => {
+      return influxDB.query(`
+        select "1.0um" from pm_ug_per_m3 
+        where sensor_id = '${sensorTag}'
+        order by time desc
+        limit 1
+      `)
+    }).then(rows => {
+      rows.forEach(row => console.log(`DB record: pm_ug_per_m3 for 1.0um is ${row['1.0um']}`))
+    })
+  }
+
+  if ('pm_per_1l_air' in req.body) {
+    influxDB.writePoints([
+      {
+        measurement: 'pm_per_1l_air',
+        tags: { sensor_id: sensorTag },
+        fields: {
+          '0.3um': req.body.pm_per_1l_air['0.3um'],
+          '0.5um': req.body.pm_per_1l_air['0.5um'],
+          '1.0um': req.body.pm_per_1l_air['1.0um'],
+          '2.5um': req.body.pm_per_1l_air['2.5um'],
+          '5.0um': req.body.pm_per_1l_air['5.0um'],
+          '10um': req.body.pm_per_1l_air['10um']
+        },
+      }
+    ]).then(() => {
+      return influxDB.query(`
+        select "0.3um" from pm_per_1l_air
+        where sensor_id = '${sensorTag}'
+        order by time desc
+        limit 1
+        `)
+    }).then(rows => {
+      rows.forEach(row => console.log(`DB record: pm_per_1l_air for 0.3um is ${row['0.3um']}`))
+    })
+  }
+
+  const responseData = {
+    pm_ug_per_m3: req.body.pm_ug_per_m3,
+    pm_per_1l_air: req.body.pm_per_1l_air,
+    sensor_id: sensorTag
+  }
+  res.send(JSON.stringify(responseData));
 });
 
 influxDB.getDatabaseNames()
