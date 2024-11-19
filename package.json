@@ -20,6 +20,7 @@
     "@babel/preset-env": "^7.23.5",
     "@babel/register": "^7.22.15",
     "mocha": "^10.2.0",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "chai": "^4.5.0"
   }
 }

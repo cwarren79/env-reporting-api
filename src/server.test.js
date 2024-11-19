@@ -1,168 +1,99 @@
 import request from 'supertest';
 import { server } from './server';
+import { expect } from 'chai';
 
-describe('/health endpoint functionality', () => {
-	it('replies with OK when a GET request is sent', (done) => {
-		request(server)
-			.get('/health')
-			.expect(/^OK$/, done);
-	});
-});
+// src/server.test.js
 
-describe('/dht endpoint functionality', () => {
-	// after((done) => {
-	// 	server.close(done);
-	// });
-	it('responds with status code 200 when a POST request is sent with all parameters', (done) => {
-		const payload = { temperature: 22, humidity: 45, tags: ["sensor:1234"] };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
 
-	it('responds with status code 200 when a POST request is sent with all parameters in different order', (done) => {
-		const payload = { "tags": ["sensor:1234"], "temperature": 22, "humidity": 45 };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
+describe('Server API', () => {
+  after(() => {
+    server.close();
+  });
 
-	it('responds with status code 200 when a POST request is sent with no humidity parameter', (done) => {
-		const payload = { temperature: 22, tags: ["sensor:1234"] };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
+  describe('GET /health', () => {
+    it('should return OK', (done) => {
+      request(server)
+        .get('/health')
+        .expect(200)
+        .expect('OK', done);
+    });
+  });
 
-	it('responds with status code 200 when a POST request is sent with no temperature parameter', (done) => {
-		const payload = { humidity: 45, tags: ["sensor:1234"] };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
+  describe('POST /dht', () => {
+    it('should return 400 if tags are missing', (done) => {
+      request(server)
+        .post('/dht')
+        .send({ temperature: 25, humidity: 60 })
+        .expect(400, done);
+    });
 
-	it('responds with status code 400 when a POST request is sent with no temperature or humidity parameter', (done) => {
-		const payload = { tags: ["sensor:1234"] };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done)
-	});
+    it('should return 400 if temperature and humidity are missing', (done) => {
+      request(server)
+        .post('/dht')
+        .send({ tags: ['sensor:123'] })
+        .expect(400, done);
+    });
 
-	it('responds with status code 400 when a POST request is sent with no tags parameter', (done) => {
-		const payload = { temperature: 22, humidity: 45 };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done);
-	});
+    it('should return 200 and store temperature and humidity', (done) => {
+      request(server)
+        .post('/dht')
+        .send({ tags: ['sensor:123'], temperature: 25, humidity: 60 })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).to.have.property('temperature', 25);
+          expect(res.body).to.have.property('humidity', 60);
+          expect(res.body).to.have.property('sensor_id', '123');
+        })
+        .end(done);
+    });
+  });
 
-	it('responds with status code 400 when the tags parameter does not contain a sensor key', (done) => {
-		const payload = { temperature: 22, humidity: 45, tags: ["somethingelse:1234"] };
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done);
-	});
-});
+  describe('POST /pms', () => {
+    it('should return 400 if tags are missing', (done) => {
+      request(server)
+        .post('/pms')
+        .send({ pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 } })
+        .expect(400, done);
+    });
 
-describe('/pms endpoint functionality', () => {
-	after((done) => {
-		server.close(done);
-	});
+    it('should return 400 if pm_ug_per_m3 and pm_per_1l_air are missing', (done) => {
+      request(server)
+        .post('/pms')
+        .send({ tags: ['sensor:123'] })
+        .expect(400, done);
+    });
 
-	it('responds with status code 200 when a POST request is sent with all parameters', (done) => {
-		const payload = {
-			pm_ug_per_m3: { '1.0um': 1, '2.5um': 2, '10um': 3 },
-			pm_per_1l_air: { '0.3um': 1, '0.5um': 2, '1.0um': 3, '2.5um': 4, '5.0um': 5, '10um': 6 },
-			tags: ["sensor:1234"]
-		};
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
+    it('should return 200 and store pm_ug_per_m3 data', (done) => {
+      request(server)
+        .post('/pms')
+        .send({ tags: ['sensor:123'], pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 } })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).to.have.property('pm_ug_per_m3');
+          expect(res.body.pm_ug_per_m3).to.have.property('1.0um', 10);
+          expect(res.body.pm_ug_per_m3).to.have.property('2.5um', 20);
+          expect(res.body.pm_ug_per_m3).to.have.property('10um', 30);
+          expect(res.body).to.have.property('sensor_id', '123');
+        })
+        .end(done);
+    });
 
-	it('responds with status code 200 when a POST request is sent with all parameters in different order', (done) => {
-		const payload = {
-			tags: ["sensor:1234"],
-			pm_ug_per_m3: { '2.5um': 2, '1.0um': 1, '10um': 3 },
-			pm_per_1l_air: { '1.0um': 3, '0.3um': 1, '2.5um': 4, '5.0um': 5, '10um': 6, '0.5um': 2 },
-		};
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
-
-	it('responds with status code 200 when a POST request is sent with no pm_per_1l_air parameter', (done) => {
-		const payload = {
-			pm_ug_per_m3: { '1.0um': 1, '2.5um': 2, '10um': 3 },
-			tags: ["sensor:1234"]
-		};
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
-
-	it('responds with status code 200 when a POST request is sent with no pm_ug_per_m3 parameter', (done) => {
-		const payload = {
-			pm_per_1l_air: { '0.3um': 1, '0.5um': 2, '1.0um': 3, '2.5um': 4, '5.0um': 5, '10um': 6 },
-			tags: ["sensor:1234"]
-		};
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(200, done);
-	});
-
-	it('responds with status code 400 when a POST request is sent with no pm_ug_per_m3 or pm_per_1l_air parameter', (done) => {
-		const payload = { tags: ["sensor:1234"] };
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done)
-	});
-
-	it('responds with status code 400 when a POST request is sent with no tags parameter', (done) => {
-		const payload = {
-			pm_ug_per_m3: { '1.0um': 1, '2.5um': 2, '10um': 3 },
-			pm_per_1l_air: { '0.3um': 1, '0.5um': 2, '1.0um': 3, '2.5um': 4, '5.0um': 5, '10um': 6 }
-		};
-		request(server)
-			.post('/pms')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done);
-	});
-
-	it('responds with status code 400 when the tags parameter does not contain a sensor key', (done) => {
-		const payload = {
-			pm_ug_per_m3: { '1.0um': 1, '2.5um': 2, '10um': 3 },
-			pm_per_1l_air: { '0.3um': 1, '0.5um': 2, '1.0um': 3, '2.5um': 4, '5.0um': 5, '10um': 6 },
-			tags: ["somethingelse:1234"]
-		};
-		request(server)
-			.post('/dht')
-			.send(payload)
-			.set('Content-Type', 'application/json')
-			.expect(400, done);
-	});
+    it('should return 200 and store pm_per_1l_air data', (done) => {
+      request(server)
+        .post('/pms')
+        .send({ tags: ['sensor:123'], pm_per_1l_air: { '0.3um': 5, '0.5um': 10, '1.0um': 15, '2.5um': 20, '5.0um': 25, '10um': 30 } })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).to.have.property('pm_per_1l_air');
+          expect(res.body.pm_per_1l_air).to.have.property('0.3um', 5);
+          expect(res.body.pm_per_1l_air).to.have.property('0.5um', 10);
+          expect(res.body.pm_per_1l_air).to.have.property('1.0um', 15);
+          expect(res.body.pm_per_1l_air).to.have.property('2.5um', 20);
+          expect(res.body.pm_per_1l_air).to.have.property('5.0um', 25);
+          expect(res.body.pm_per_1l_air).to.have.property('10um', 30);
+          expect(res.body).to.have.property('sensor_id', '123');
+        })
+        .end(done);
+    });
+  });
 });

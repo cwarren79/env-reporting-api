@@ -129,7 +129,7 @@ app.post('/dht', (req, res) => {
     humidity: req.body.humidity,
     sensor_id: sensorTag
   }
-  res.send(JSON.stringify(responseData));
+  res.json(responseData);
 });
 
 app.post('/pms', (req, res) => {
@@ -168,7 +168,7 @@ app.post('/pms', (req, res) => {
       }
     ]).then(() => {
       return influxDB.query(`
-        select "1.0um" from pm_ug_per_m3 
+        select "1.0um" from pm_ug_per_m3
         where sensor_id = '${sensorTag}'
         order by time desc
         limit 1
@@ -209,7 +209,7 @@ app.post('/pms', (req, res) => {
     pm_per_1l_air: req.body.pm_per_1l_air,
     sensor_id: sensorTag
   }
-  res.send(JSON.stringify(responseData));
+  res.json(responseData);
 });
 
 influxDB.getDatabaseNames()
