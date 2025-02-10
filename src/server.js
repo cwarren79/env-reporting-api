@@ -1,12 +1,24 @@
 import express from 'express';
 import { InfluxDB, FieldType } from 'influx';
 
-const db = process.env.INFLUX_DB
-const host = process.env.INFLUX_HOST
+// Constants should be at the top
+const DEFAULT_PORT = 3030;
+const DEFAULT_INFLUX_PORT = 8086;
+
+// Validate required environment variables
+const requiredEnvVars = ['INFLUX_DB', 'INFLUX_HOST', 'API_KEY'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length) {
+  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  process.exit(1);
+}
+
+const db = process.env.INFLUX_DB;
+const host = process.env.INFLUX_HOST;
 
 const influxDB = new InfluxDB({
   host: host,
-  port: 8086,
+  port: process.env.INFLUX_PORT || DEFAULT_INFLUX_PORT,
   database: db,
   schema: [
     {
@@ -145,72 +157,71 @@ app.get('/health', (req, res) => {
   res.send('OK');
 });
 
-app.post('/dht', validateApiKey, validateDHT, (req, res) => {
-  console.log(req.body);
-  console.log(`Temperature: ${req.body.temperature}`);
-  console.log(`Humidity: ${req.body.humidity}`);
-  if (!('tags' in req.body)) {
-    res.sendStatus(400);
-    return;
-  }
-  console.log('Tags:');
-  let sensorTag = '';
-  req.body.tags.forEach(tag => {
-    const [tagName, tagValue] = tag.split(":");
-    console.log(`  ${tagName} => ${tagValue}`)
-    if (tagName === 'sensor') { sensorTag = tagValue; }
-  })
-  if (sensorTag === '') {
-    res.sendStatus(400);
-    return;
-  }
-  if (!('temperature' in req.body) && !('humidity' in req.body)) {
-    res.sendStatus(400);
-    return;
-  }
-  if ('temperature' in req.body) {
-    influxDB.writePoints([
-      {
-        measurement: 'temperature',
-        tags: { sensor_id: sensorTag },
-        fields: { 'temperature': req.body.temperature },
-      }
-    ]).then(() => {
-      return influxDB.query(`
-        select * from temperature
-        where sensor_id = '${sensorTag}'
-        order by time desc
-        limit 1
-      `)
-    }).then(rows => {
-      rows.forEach(row => console.log(`DB record: temperature is ${row.temperature} C`))
-    })
-  }
-  if ('humidity' in req.body) {
-    influxDB.writePoints([
-      {
-        measurement: 'humidity',
-        tags: { sensor_id: sensorTag },
-        fields: { humidity: req.body.humidity },
-      }
-    ]).then(() => {
-      return influxDB.query(`
-        select * from humidity
-        where sensor_id = '${sensorTag}'
-        order by time desc
-        limit 1
-      `)
-    }).then(rows => {
-      rows.forEach(row => console.log(`DB record: humidity is ${row.humidity}%`))
-    })
-  }
+// Helper to safely escape values for InfluxQL
+const escapeString = (str) => str.replace(/['"\\\x00-\x1f\x7f-\x9f]/g, '');
 
-  const responseData = {
-    temperature: req.body.temperature,
-    humidity: req.body.humidity,
-    sensor_id: sensorTag
+// Helper for consistent error responses
+const sendError = (res, status, message) => {
+  console.error(`Error: ${message}`);
+  return res.status(status).json({ error: message });
+};
+
+// Helper for database operations
+const writeToInflux = async (influx, measurement, tags, fields) => {
+  try {
+    await influx.writePoints([{ measurement, tags, fields }]);
+    const query = `select * from ${measurement}
+      where sensor_id = '${escapeString(tags.sensor_id)}'
+      order by time desc
+      limit 1`;
+    const rows = await influx.query(query);
+    return rows;
+  } catch (error) {
+    console.error(`Database error: ${error.message}`);
+    throw error;
   }
-  res.json(responseData);
+};
+
+// Extract tag parsing logic
+const extractSensorTag = (tags) => {
+  const sensorTag = tags
+    .map(tag => tag.split(':'))
+    .find(([name]) => name === 'sensor');
+  return sensorTag ? sensorTag[1] : '';
+};
+
+app.post('/dht', validateApiKey, validateDHT, async (req, res) => {
+  try {
+    const { tags, temperature, humidity } = req.body;
+    const sensorTag = extractSensorTag(tags);
+
+    if (!sensorTag) {
+      return sendError(res, 400, 'Missing sensor tag');
+    }
+
+    const results = [];
+    if (temperature !== undefined) {
+      const result = await writeToInflux(influxDB, 'temperature',
+        { sensor_id: sensorTag },
+        { temperature });
+      results.push(result);
+    }
+
+    if (humidity !== undefined) {
+      const result = await writeToInflux(influxDB, 'humidity',
+        { sensor_id: sensorTag },
+        { humidity });
+      results.push(result);
+    }
+
+    res.json({
+      temperature,
+      humidity,
+      sensor_id: sensorTag
+    });
+  } catch (error) {
+    sendError(res, 500, 'Internal server error');
+  }
 });
 
 app.post('/pms', validateApiKey, validatePMS, (req, res) => {
@@ -293,21 +304,33 @@ app.post('/pms', validateApiKey, validatePMS, (req, res) => {
   res.json(responseData);
 });
 
-influxDB.getDatabaseNames()
-  .then(names => {
+// Database initialization
+const initializeDatabase = async () => {
+  try {
+    const names = await influxDB.getDatabaseNames();
     if (!names.includes(db)) {
-      return influxDB.createDatabase(db);
+      await influxDB.createDatabase(db);
     }
-  })
-  .then(() => {
-    console.log('Database exists');
-  })
-  .catch(err => {
-    console.error(`Error creating Influx database!`);
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
     process.exit(1);
-  })
+  }
+};
 
-const server = app.listen(3030, () => {
-  console.log('Express server is listening on port 3030');
-});
-export { server };
+// Server initialization
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    const port = process.env.PORT || DEFAULT_PORT;
+    const server = app.listen(port, () => {
+      console.log(`Express server is listening on port ${port}`);
+    });
+    return server;
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+export const server = await startServer();
