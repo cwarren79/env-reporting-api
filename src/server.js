@@ -59,12 +59,93 @@ const app = express();
 
 app.use(express.json());
 
+const validateApiKey = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Bearer token is required' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (token !== process.env.API_KEY) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
+  next();
+};
+
+// Simple validation helpers
+const isNumber = (value) => typeof value === 'number' && !isNaN(value);
+const isObject = (value) => typeof value === 'object' && value !== null;
+
+// Validation middleware for DHT endpoint
+const validateDHT = (req, res, next) => {
+  const { tags, temperature, humidity } = req.body;
+
+  // Validate tags
+  if (!Array.isArray(tags) || !tags.length) {
+    return res.status(400).json({ error: 'tags must be a non-empty array' });
+  }
+
+  // Validate at least one measurement is present
+  if (temperature === undefined && humidity === undefined) {
+    return res.status(400).json({ error: 'temperature or humidity is required' });
+  }
+
+  // Validate measurements if present
+  if (temperature !== undefined && !isNumber(temperature)) {
+    return res.status(400).json({ error: 'temperature must be a number' });
+  }
+
+  if (humidity !== undefined && !isNumber(humidity)) {
+    return res.status(400).json({ error: 'humidity must be a number' });
+  }
+
+  next();
+};
+
+// Validation middleware for PMS endpoint
+const validatePMS = (req, res, next) => {
+  const { tags, pm_ug_per_m3, pm_per_1l_air } = req.body;
+
+  // Validate tags
+  if (!Array.isArray(tags) || !tags.length) {
+    return res.status(400).json({ error: 'tags must be a non-empty array' });
+  }
+
+  // Validate at least one measurement is present
+  if (!pm_ug_per_m3 && !pm_per_1l_air) {
+    return res.status(400).json({ error: 'pm_ug_per_m3 or pm_per_1l_air is required' });
+  }
+
+  // Validate pm_ug_per_m3 if present
+  if (pm_ug_per_m3 && (!isObject(pm_ug_per_m3) ||
+      !isNumber(pm_ug_per_m3['1.0um']) ||
+      !isNumber(pm_ug_per_m3['2.5um']) ||
+      !isNumber(pm_ug_per_m3['10um']))) {
+    return res.status(400).json({ error: 'invalid pm_ug_per_m3 format' });
+  }
+
+  // Validate pm_per_1l_air if present
+  if (pm_per_1l_air && (!isObject(pm_per_1l_air) ||
+      !isNumber(pm_per_1l_air['0.3um']) ||
+      !isNumber(pm_per_1l_air['0.5um']) ||
+      !isNumber(pm_per_1l_air['1.0um']) ||
+      !isNumber(pm_per_1l_air['2.5um']) ||
+      !isNumber(pm_per_1l_air['5.0um']) ||
+      !isNumber(pm_per_1l_air['10um']))) {
+    return res.status(400).json({ error: 'invalid pm_per_1l_air format' });
+  }
+
+  next();
+};
+
 app.get('/health', (req, res) => {
   console.log('Received GET request on the path /health');
   res.send('OK');
 });
 
-app.post('/dht', (req, res) => {
+app.post('/dht', validateApiKey, validateDHT, (req, res) => {
   console.log(req.body);
   console.log(`Temperature: ${req.body.temperature}`);
   console.log(`Humidity: ${req.body.humidity}`);
@@ -132,7 +213,7 @@ app.post('/dht', (req, res) => {
   res.json(responseData);
 });
 
-app.post('/pms', (req, res) => {
+app.post('/pms', validateApiKey, validatePMS, (req, res) => {
   console.log(req.body);
 
   if (!('tags' in req.body)) {
