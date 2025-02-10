@@ -1,9 +1,10 @@
 import request from 'supertest';
-import { server } from './server';
+import { server } from './server.js';
 import { expect } from 'chai';
 
 // src/server.test.js
 
+const API_KEY = '1234567890';
 
 describe('Server API', () => {
   after(() => {
@@ -14,6 +15,7 @@ describe('Server API', () => {
     it('should return OK', (done) => {
       request(server)
         .get('/health')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .expect(200)
         .expect('OK', done);
     });
@@ -23,6 +25,7 @@ describe('Server API', () => {
     it('should return 400 if tags are missing', (done) => {
       request(server)
         .post('/dht')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ temperature: 25, humidity: 60 })
         .expect(400, done);
     });
@@ -30,6 +33,7 @@ describe('Server API', () => {
     it('should return 400 if temperature and humidity are missing', (done) => {
       request(server)
         .post('/dht')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ tags: ['sensor:123'] })
         .expect(400, done);
     });
@@ -37,6 +41,7 @@ describe('Server API', () => {
     it('should return 200 and store temperature and humidity', (done) => {
       request(server)
         .post('/dht')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ tags: ['sensor:123'], temperature: 25, humidity: 60 })
         .expect(200)
         .expect((res) => {
@@ -52,6 +57,7 @@ describe('Server API', () => {
     it('should return 400 if tags are missing', (done) => {
       request(server)
         .post('/pms')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 } })
         .expect(400, done);
     });
@@ -59,6 +65,7 @@ describe('Server API', () => {
     it('should return 400 if pm_ug_per_m3 and pm_per_1l_air are missing', (done) => {
       request(server)
         .post('/pms')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ tags: ['sensor:123'] })
         .expect(400, done);
     });
@@ -66,6 +73,7 @@ describe('Server API', () => {
     it('should return 200 and store pm_ug_per_m3 data', (done) => {
       request(server)
         .post('/pms')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ tags: ['sensor:123'], pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 } })
         .expect(200)
         .expect((res) => {
@@ -81,6 +89,7 @@ describe('Server API', () => {
     it('should return 200 and store pm_per_1l_air data', (done) => {
       request(server)
         .post('/pms')
+        .set('Authorization', `Bearer ${API_KEY}`)
         .send({ tags: ['sensor:123'], pm_per_1l_air: { '0.3um': 5, '0.5um': 10, '1.0um': 15, '2.5um': 20, '5.0um': 25, '10um': 30 } })
         .expect(200)
         .expect((res) => {
