@@ -29,9 +29,18 @@ export const writeToInflux = async (influxDB, measurement, tags, fields) => {
 
 // Helper to extract sensor ID from tags array
 export const extractSensorTag = (tags) => {
-    const sensorTag = tags.find(tag => tag.startsWith('sensor:'));
+    if (!Array.isArray(tags)) {
+        throw new Error('tags must be an array');
+    }
+    const sensorTag = tags.find(tag =>
+        typeof tag === 'string' && tag.startsWith('sensor:')
+    );
     if (!sensorTag) {
         throw new Error('sensor tag not found');
     }
-    return sensorTag.split(':')[1];
+    const [prefix, id] = sensorTag.split(':');
+    if (!id) {
+        throw new Error('invalid sensor tag format');
+    }
+    return id;
 }; 
