@@ -1,71 +1,6 @@
 import express from 'express';
-import { InfluxDB, FieldType } from 'influx';
-
-// Constants should be at the top
-const DEFAULT_PORT = 3030;
-const DEFAULT_INFLUX_PORT = 8086;
-
-// Validate required environment variables
-const requiredEnvVars = ['INFLUX_DB', 'INFLUX_HOST', 'API_KEY'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-if (missingEnvVars.length) {
-  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
-}
-
-const db = process.env.INFLUX_DB;
-const host = process.env.INFLUX_HOST;
-
-const influxDB = new InfluxDB({
-  host: host,
-  port: process.env.INFLUX_PORT || DEFAULT_INFLUX_PORT,
-  database: db,
-  schema: [
-    {
-      measurement: 'temperature',
-      fields: {
-        temperature: FieldType.INTEGER
-      },
-      tags: [
-        'sensor_id'
-      ]
-    },
-    {
-      measurement: 'humidity',
-      fields: {
-        humidity: FieldType.INTEGER
-      },
-      tags: [
-        'sensor_id'
-      ]
-    },
-    {
-      measurement: 'pm_ug_per_m3',
-      fields: {
-        '1.0um': FieldType.INTEGER,
-        '2.5um': FieldType.INTEGER,
-        '10um': FieldType.INTEGER
-      },
-      tags: [
-        'sensor_id'
-      ]
-    },
-    {
-      measurement: 'pm_per_1l_air',
-      fields: {
-        '0.3um': FieldType.INTEGER,
-        '0.5um': FieldType.INTEGER,
-        '1.0um': FieldType.INTEGER,
-        '2.5um': FieldType.INTEGER,
-        '5.0um': FieldType.INTEGER,
-        '10um': FieldType.INTEGER
-      },
-      tags: [
-        'sensor_id'
-      ]
-    }
-  ]
-})
+import { influxDB, initializeDatabase } from './config/database.js';
+import { config } from './config/env.js';
 
 const app = express();
 
@@ -79,7 +14,7 @@ const validateApiKey = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  if (token !== process.env.API_KEY) {
+  if (token !== config.apiKey) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
@@ -132,20 +67,20 @@ const validatePMS = (req, res, next) => {
 
   // Validate pm_ug_per_m3 if present
   if (pm_ug_per_m3 && (!isObject(pm_ug_per_m3) ||
-      !isNumber(pm_ug_per_m3['1.0um']) ||
-      !isNumber(pm_ug_per_m3['2.5um']) ||
-      !isNumber(pm_ug_per_m3['10um']))) {
+    !isNumber(pm_ug_per_m3['1.0um']) ||
+    !isNumber(pm_ug_per_m3['2.5um']) ||
+    !isNumber(pm_ug_per_m3['10um']))) {
     return res.status(400).json({ error: 'invalid pm_ug_per_m3 format' });
   }
 
   // Validate pm_per_1l_air if present
   if (pm_per_1l_air && (!isObject(pm_per_1l_air) ||
-      !isNumber(pm_per_1l_air['0.3um']) ||
-      !isNumber(pm_per_1l_air['0.5um']) ||
-      !isNumber(pm_per_1l_air['1.0um']) ||
-      !isNumber(pm_per_1l_air['2.5um']) ||
-      !isNumber(pm_per_1l_air['5.0um']) ||
-      !isNumber(pm_per_1l_air['10um']))) {
+    !isNumber(pm_per_1l_air['0.3um']) ||
+    !isNumber(pm_per_1l_air['0.5um']) ||
+    !isNumber(pm_per_1l_air['1.0um']) ||
+    !isNumber(pm_per_1l_air['2.5um']) ||
+    !isNumber(pm_per_1l_air['5.0um']) ||
+    !isNumber(pm_per_1l_air['10um']))) {
     return res.status(400).json({ error: 'invalid pm_per_1l_air format' });
   }
 
@@ -304,27 +239,12 @@ app.post('/pms', validateApiKey, validatePMS, (req, res) => {
   res.json(responseData);
 });
 
-// Database initialization
-const initializeDatabase = async () => {
-  try {
-    const names = await influxDB.getDatabaseNames();
-    if (!names.includes(db)) {
-      await influxDB.createDatabase(db);
-    }
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize database:', error);
-    process.exit(1);
-  }
-};
-
 // Server initialization
 const startServer = async () => {
   try {
     await initializeDatabase();
-    const port = process.env.PORT || DEFAULT_PORT;
-    const server = app.listen(port, () => {
-      console.log(`Express server is listening on port ${port}`);
+    const server = app.listen(config.port, () => {
+      console.log(`Express server is listening on port ${config.port}`);
     });
     return server;
   } catch (error) {
