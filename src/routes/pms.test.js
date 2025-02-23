@@ -1,10 +1,19 @@
 import request from 'supertest';
-import { server } from '../server.js';
+import { startServer } from '../server.js';
 import { expect } from 'chai';
+
+let server;
 
 const API_KEY = process.env.API_KEY || '1234567890';
 
 describe('PMS Endpoint', () => {
+    before(async () => {
+        server = await startServer();
+    });
+
+    after(() => {
+        server.close();
+    });
     describe('POST /pms', () => {
         it('should return 401 without API key', (done) => {
             request(server)
@@ -72,6 +81,25 @@ describe('PMS Endpoint', () => {
                     expect(res.body.pm_per_1l_air).to.have.property('5.0um', 25);
                     expect(res.body.pm_per_1l_air).to.have.property('10um', 30);
                     expect(res.body).to.have.property('sensor_id', '123');
+                })
+                .end(done);
+        });
+
+        it('should reject non-numeric values', (done) => {
+            request(server)
+                .post('/pms')
+                .set('Authorization', `Bearer ${API_KEY}`)
+                .send({
+                    tags: ['sensor:123'],
+                    pm_ug_per_m3: {
+                        '1.0um': 'invalid',
+                        '2.5um': 20,
+                        '10um': 30
+                    }
+                })
+                .expect(400)
+                .expect((res) => {
+                    expect(res.body.error).to.include('number');
                 })
                 .end(done);
         });

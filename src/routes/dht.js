@@ -1,36 +1,12 @@
 import express from 'express';
 import { influxDB } from '../config/database.js';
-import { isNumber, sendError, writeToInflux, extractSensorTag } from '../utils/helpers.js';
+import { sendError, writeToInflux, extractSensorTag } from '../utils/helpers.js';
+import { validateRequest } from '../middleware/validateRequest.js';
+import { dhtSchema } from '../schemas/sensors.js';
 
 const router = express.Router();
 
-// Validation middleware for DHT endpoint
-export const validateDHT = (req, res, next) => {
-    const { tags, temperature, humidity } = req.body;
-
-    // Validate tags
-    if (!Array.isArray(tags) || !tags.length) {
-        return sendError(res, 400, 'tags must be a non-empty array');
-    }
-
-    // Validate at least one measurement is present
-    if (temperature === undefined && humidity === undefined) {
-        return sendError(res, 400, 'temperature or humidity is required');
-    }
-
-    // Validate measurements if present
-    if (temperature !== undefined && !isNumber(temperature)) {
-        return sendError(res, 400, 'temperature must be a number');
-    }
-
-    if (humidity !== undefined && !isNumber(humidity)) {
-        return sendError(res, 400, 'humidity must be a number');
-    }
-
-    next();
-};
-
-router.post('/', validateDHT, async (req, res) => {
+router.post('/', validateRequest(dhtSchema), async (req, res) => {
     const { tags, temperature, humidity } = req.body;
 
     try {

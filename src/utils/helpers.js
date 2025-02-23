@@ -1,7 +1,3 @@
-// Common validation helpers
-export const isNumber = (value) => typeof value === 'number' && !isNaN(value);
-export const isObject = (value) => typeof value === 'object' && value !== null;
-
 // Helper to escape special characters in InfluxDB queries
 export const escapeString = (str) => str.replace(/([,"\s])/g, '\\$1');
 
