@@ -14,25 +14,25 @@ describe('API Key Validation', () => {
         server.close();
     });
 
-    it('should reject malformed bearer token', (done) => {
+    it('should reject request with malformed authorization header', (done) => {
         request(server)
             .post('/dht')
-            .set('Authorization', 'Bearer')
+            .set('Authorization', 'malformed')
             .expect(401)
             .expect((res) => {
-                expect(res.body.error).to.equal('Bearer token is required');
+                expect(res.body.error).to.equal('HMAC signature is required');
             })
             .end(done);
     });
 
-    it('should reject token with wrong prefix', (done) => {
+    it('should reject request with incorrect authorization prefix', (done) => {
         request(server)
             .post('/dht')
-            .set('Authorization', `Token ${API_KEY}`)
+            .set('Authorization', 'Bearer abc123')
             .expect(401)
             .expect((res) => {
-                expect(res.body.error).to.equal('Bearer token is required');
+                expect(res.body.error).to.equal('HMAC signature is required');
             })
             .end(done);
     });
-}); 
+});
