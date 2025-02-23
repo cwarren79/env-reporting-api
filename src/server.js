@@ -30,4 +30,12 @@ const startServer = async () => {
   }
 };
 
+// Only start the server if this file is run directly (not imported as a module)
+if (process.env.NODE_ENV !== 'test') {
+  startServer().catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}
+
 export { app, startServer };
