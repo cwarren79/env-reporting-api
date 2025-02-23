@@ -8,7 +8,7 @@ A Node.js API for collecting and storing environmental sensor data (temperature,
 - Particulate matter measurements (PMS sensors)
 - InfluxDB time-series storage
 - Grafana dashboard support
-- API key authentication
+- HMAC signature authentication
 - Docker containerization
 
 ## Prerequisites
@@ -25,15 +25,15 @@ A Node.js API for collecting and storing environmental sensor data (temperature,
     cd env_reporting_api
 
 2. Create a `.env` file with required environment variables:
-    
+
         INFLUX_DB=deebee
         INFLUX_HOST=influxdb
-        API_KEY=your_secure_api_key_here
-    
+        SIGNING_SECRET=your_secure_signing_secret_here
+
 3. Start the services:
-    
+
         docker compose up -d
-    
+
 
 The API will be available at `http://localhost:3030`
 
@@ -45,7 +45,7 @@ The API will be available at `http://localhost:3030`
 | `INFLUX_DB` | InfluxDB database name | (required) |
 | `INFLUX_HOST` | InfluxDB hostname | (required) |
 | `INFLUX_PORT` | InfluxDB port | 8086 |
-| `API_KEY` | Authentication key for API access | (required) |
+| `SIGNING_SECRET` | HMAC signing secret | (required) |
 
 ## API Endpoints
 
@@ -57,7 +57,7 @@ The API will be available at `http://localhost:3030`
 ### DHT Sensor Data
 
     POST /dht
-    Headers: Authorization: Bearer <api_key>
+    Headers: Authorization: HMAC <hmac_signature>
     Body: {
         "tags": ["sensor:123"],
         "temperature": 25,
@@ -67,7 +67,7 @@ The API will be available at `http://localhost:3030`
 ### PMS Sensor Data
 
     POST /pms
-    Headers: Authorization: Bearer <api_key>
+    Headers: Authorization: HMAC <hmac_signature>
     Body: {
         "tags": ["sensor:123"],
         "pm_ug_per_m3": {

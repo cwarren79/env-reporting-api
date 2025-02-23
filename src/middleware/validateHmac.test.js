@@ -3,9 +3,8 @@ import { startServer } from '../server.js';
 import { expect } from 'chai';
 
 let server;
-const API_KEY = process.env.API_KEY || '1234567890';
 
-describe('API Key Validation', () => {
+describe('HMAC Validation', () => {
     before(async () => {
         server = await startServer();
     });

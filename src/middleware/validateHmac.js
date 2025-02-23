@@ -2,7 +2,7 @@ import { config } from '../config/env.js';
 import { sendError } from '../utils/helpers.js';
 import crypto from 'crypto';
 
-export const validateApiKey = (req, res, next) => {
+export const validateHmac = (req, res, next) => {
     const authHeader = req.header('Authorization');
 
     if (!authHeader || !authHeader.startsWith('HMAC ')) {
@@ -14,7 +14,7 @@ export const validateApiKey = (req, res, next) => {
     // Calculate HMAC of request body
     const body = req.body ? JSON.stringify(req.body) : '';
     const expectedSignature = crypto
-        .createHmac('sha256', config.apiKey)
+        .createHmac('sha256', config.signingSecret)
         .update(body)
         .digest('hex');
 

@@ -12,6 +12,7 @@ services:
     environment:
       - INFLUX_HOST=influxdb
       - INFLUX_DB=deebee
+      - SIGNING_SECRET=your_secure_signing_secret_here
   influxdb:
     container_name: influxdb
     image: influxdb:1.8

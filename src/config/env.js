@@ -6,7 +6,7 @@ const DEFAULT_INFLUX_PORT = 8086;
 const requiredEnvVars = {
     INFLUX_DB: 'Database name is required',
     INFLUX_HOST: 'Database host is required',
-    API_KEY: 'API key is required for authentication'
+    SIGNING_SECRET: 'HMAC signing secret is required for authentication'
 };
 
 // Validate all required environment variables
@@ -25,5 +25,5 @@ export const config = {
         host: process.env.INFLUX_HOST,
         port: process.env.INFLUX_PORT || DEFAULT_INFLUX_PORT
     },
-    apiKey: process.env.API_KEY
-}; 
+    signingSecret: process.env.SIGNING_SECRET
+};
