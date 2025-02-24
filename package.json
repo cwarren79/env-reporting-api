@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "docker compose -f docker-compose.test.yml up -d && sleep 1 && npx mocha \"src/**/*.test.js\" --recursive && docker compose -f docker-compose.test.yml down",
-    "start": "npx babel-node src/server.js"
+    "start": "npx babel-node src/start-server.js"
   },
   "author": "",
   "license": "ISC",

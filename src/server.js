@@ -30,10 +30,4 @@ const startServer = async () => {
   }
 };
 
-export { app, startServer };
-
-// Start server if this file is run directly
-import { fileURLToPath } from 'url';
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  startServer();
-}
+export { startServer };
