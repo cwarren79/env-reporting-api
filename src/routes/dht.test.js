@@ -29,7 +29,7 @@ describe('DHT Endpoint', () => {
         it('should return 400 if tags are missing', (done) => {
             request(server)
                 .post('/dht')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({ temperature: 25, humidity: 60 })
                 .expect(400, done);
         });
@@ -37,7 +37,7 @@ describe('DHT Endpoint', () => {
         it('should return 400 if temperature and humidity are missing', (done) => {
             request(server)
                 .post('/dht')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({ tags: ['sensor:123'] })
                 .expect(400, done);
         });
@@ -45,7 +45,7 @@ describe('DHT Endpoint', () => {
         it('should return 200 and store temperature and humidity', (done) => {
             request(server)
                 .post('/dht')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({ tags: ['sensor:123'], temperature: 25, humidity: 60 })
                 .expect(200)
                 .expect((res) => {
@@ -73,7 +73,7 @@ describe('DHT Endpoint', () => {
         it('should return 500 when database write fails', (done) => {
             request(server)
                 .post('/dht')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({
                     tags: ['sensor:123'],
                     temperature: 25
@@ -90,7 +90,7 @@ describe('DHT Endpoint', () => {
         it('should return 400 for invalid sensor tag format', (done) => {
             request(server)
                 .post('/dht')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({
                     tags: ['invalid:123'],
                     temperature: 25
@@ -102,4 +102,4 @@ describe('DHT Endpoint', () => {
                 .end(done);
         });
     });
-}); 
+});

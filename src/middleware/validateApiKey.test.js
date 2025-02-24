@@ -14,25 +14,24 @@ describe('API Key Validation', () => {
         server.close();
     });
 
-    it('should reject malformed bearer token', (done) => {
+    it('should reject requests without API key', (done) => {
         request(server)
             .post('/dht')
-            .set('Authorization', 'Bearer')
             .expect(401)
             .expect((res) => {
-                expect(res.body.error).to.equal('Bearer token is required');
+                expect(res.body.error).to.equal('API key is required');
             })
             .end(done);
     });
 
-    it('should reject token with wrong prefix', (done) => {
+    it('should reject invalid API key', (done) => {
         request(server)
             .post('/dht')
-            .set('Authorization', `Token ${API_KEY}`)
+            .set('X-API-Key', 'invalid-key')
             .expect(401)
             .expect((res) => {
-                expect(res.body.error).to.equal('Bearer token is required');
+                expect(res.body.error).to.equal('Invalid API key');
             })
             .end(done);
     });
-}); 
+});

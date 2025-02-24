@@ -28,7 +28,7 @@ describe('PMS Endpoint', () => {
         it('should return 400 if tags are missing', (done) => {
             request(server)
                 .post('/pms')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({ pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 } })
                 .expect(400, done);
         });
@@ -36,7 +36,7 @@ describe('PMS Endpoint', () => {
         it('should return 400 if pm_ug_per_m3 and pm_per_1l_air are missing', (done) => {
             request(server)
                 .post('/pms')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({ tags: ['sensor:123'] })
                 .expect(400, done);
         });
@@ -44,7 +44,7 @@ describe('PMS Endpoint', () => {
         it('should return 200 and store pm_ug_per_m3 data', (done) => {
             request(server)
                 .post('/pms')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({
                     tags: ['sensor:123'],
                     pm_ug_per_m3: { '1.0um': 10, '2.5um': 20, '10um': 30 }
@@ -63,7 +63,7 @@ describe('PMS Endpoint', () => {
         it('should return 200 and store pm_per_1l_air data', (done) => {
             request(server)
                 .post('/pms')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({
                     tags: ['sensor:123'],
                     pm_per_1l_air: {
@@ -88,7 +88,7 @@ describe('PMS Endpoint', () => {
         it('should reject non-numeric values', (done) => {
             request(server)
                 .post('/pms')
-                .set('Authorization', `Bearer ${API_KEY}`)
+                .set('X-API-Key', API_KEY)
                 .send({
                     tags: ['sensor:123'],
                     pm_ug_per_m3: {
@@ -104,4 +104,4 @@ describe('PMS Endpoint', () => {
                 .end(done);
         });
     });
-}); 
+});
