@@ -22,7 +22,7 @@ A Node.js API for collecting and storing environmental sensor data (temperature,
 1. Clone the repository:
 
     git clone `<repository-url>`
-   
+
     cd env-reporting-api
 
 3. Create a `.env` file with required environment variables:
@@ -95,7 +95,7 @@ The API will be available at `http://localhost:3030`
 2. Start development environment:
 
     docker compose -f docker-compose.test.yml up -d
-   
+
     npm start
 
 4. Run tests:
@@ -118,15 +118,3 @@ The API will be available at `http://localhost:3030`
 - `pm_per_1l_air`: Particle count per liter of air
 
 All measurements include a `sensor_id` tag for identification.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-Unlicensed
