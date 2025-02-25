@@ -21,16 +21,17 @@ A Node.js API for collecting and storing environmental sensor data (temperature,
 
 1. Clone the repository:
 
-    git clone <repository-url>
-    cd env_reporting_api
+    git clone `<repository-url>`
+   
+    cd env-reporting-api
 
-2. Create a `.env` file with required environment variables:
+3. Create a `.env` file with required environment variables:
 
         INFLUX_DB=deebee
         INFLUX_HOST=influxdb
         API_KEY=your_secure_api_key_here
 
-3. Start the services:
+4. Start the services:
 
         docker compose up -d
 
