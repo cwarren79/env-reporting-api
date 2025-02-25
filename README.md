@@ -95,9 +95,10 @@ The API will be available at `http://localhost:3030`
 2. Start development environment:
 
     docker compose -f docker-compose.test.yml up -d
+   
     npm start
 
-3. Run tests:
+4. Run tests:
 
     npm test
 
