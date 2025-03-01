@@ -1,3 +1,6 @@
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
 // Helper to escape special characters in InfluxDB queries
 export const escapeString = (str) => str.replace(/([,"\s])/g, '\\$1');
 
@@ -39,4 +42,7 @@ export const extractSensorTag = (tags) => {
         throw new Error('invalid sensor tag format');
     }
     return id;
-}; 
+};
+
+// Promisify exec for async/await usage
+export const execAsync = promisify(exec);
