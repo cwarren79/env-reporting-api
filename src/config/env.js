@@ -26,4 +26,4 @@ export const config = {
         port: process.env.INFLUX_PORT || DEFAULT_INFLUX_PORT
     },
     apiKey: process.env.API_KEY
-}; 
+};

@@ -2,6 +2,7 @@ import express from 'express';
 import { initializeDatabase } from './config/database.js';
 import { config } from './config/env.js';
 import { validateApiKey } from './middleware/validateApiKey.js';
+import { limiter } from './middleware/rateLimit.js';
 
 // Import routes
 import healthRouter from './routes/health.js';
@@ -12,10 +13,10 @@ const app = express();
 
 app.use(express.json());
 
-// Apply API key validation to all routes except health
+// Apply routes
 app.use('/health', healthRouter);
-app.use('/dht', validateApiKey, dhtRouter);
-app.use('/pms', validateApiKey, pmsRouter);
+app.use('/dht', validateApiKey, limiter, dhtRouter);
+app.use('/pms', validateApiKey, limiter, pmsRouter);
 
 const startServer = async () => {
   try {
