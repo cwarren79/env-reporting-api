@@ -72,4 +72,4 @@ const initializeDatabase = async (): Promise<void> => {
     }
 };
 
-export { influxDB, initializeDatabase }; 
+export { influxDB, initializeDatabase };
