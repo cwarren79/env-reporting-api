@@ -1,35 +1,22 @@
 {
     "compilerOptions": {
-        "target": "esnext",
-        "module": "nodenext",
-        "lib": [
-            "esnext"
-        ],
-        "allowJs": true,
-        "outDir": "./dist",
-        "rootDir": "./",
-        "strict": true,
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "esModuleInterop": true,
+        "strict": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "nodenext",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "noEmit": true,
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true,
-        "exactOptionalPropertyTypes": true,
-        "removeComments": true
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "sourceMap": true,
+        "declaration": true
     },
     "include": [
-        "**/*.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist",
-        "**/*.test.ts",
-        "**/*.spec.ts"
+        "**/*.test.ts"
     ]
 }

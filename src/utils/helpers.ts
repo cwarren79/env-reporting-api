@@ -1,16 +1,30 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { Response } from 'express';
+import { InfluxDB } from 'influx';
 
 // Helper to escape special characters in InfluxDB queries
-export const escapeString = (str) => str.replace(/([,"\s])/g, '\\$1');
+export const escapeString = (str: string): string => str.replace(/([,"\s])/g, '\\$1');
 
 // Helper for consistent error responses
-export const sendError = (res, status, message) => {
+export const sendError = (res: Response, status: number, message: string): void => {
     res.status(status).json({ error: message });
 };
 
+interface InfluxPoint {
+    measurement: string;
+    tags: Record<string, string>;
+    fields: Record<string, any>;
+    timestamp: Date;
+}
+
 // Helper to write data points to InfluxDB
-export const writeToInflux = async (influxDB, measurement, tags, fields) => {
+export const writeToInflux = async (
+    influxDB: InfluxDB,
+    measurement: string,
+    tags: Record<string, string>,
+    fields: Record<string, any>
+): Promise<void> => {
     try {
         await influxDB.writePoints([
             {
@@ -27,7 +41,7 @@ export const writeToInflux = async (influxDB, measurement, tags, fields) => {
 };
 
 // Helper to extract sensor ID from tags array
-export const extractSensorTag = (tags) => {
+export const extractSensorTag = (tags: string[]): string => {
     if (!Array.isArray(tags)) {
         throw new Error('tags must be an array');
     }
