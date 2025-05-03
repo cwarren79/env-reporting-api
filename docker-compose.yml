@@ -12,6 +12,7 @@ services:
     environment:
       - INFLUX_HOST=influxdb
       - INFLUX_DB=deebee
+      - API_KEY=1234567890
   influxdb:
     container_name: influxdb
     image: influxdb:1.8

@@ -1,12 +1,18 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { influxDB } from '../config/database.js';
 import { sendError, writeToInflux, extractSensorTag } from '../utils/helpers.js';
 import { validateRequest } from '../middleware/validateRequest.js';
-import { pmsSchema } from '../schemas/sensors.js';
+import { pmsSchema, PMSSensor, PMUgPerM3, PMPer1LAir } from '../schemas/sensors.js';
 
 const router = express.Router();
 
-router.post('/', validateRequest(pmsSchema), async (req, res) => {
+interface PMSResponse {
+    pm_ug_per_m3?: PMUgPerM3;
+    pm_per_1l_air?: PMPer1LAir;
+    sensor_id: string;
+}
+
+router.post('/', validateRequest(pmsSchema), async (req: Request<{}, {}, PMSSensor>, res: Response<PMSResponse | { error: string }>) => {
     const { tags, pm_ug_per_m3, pm_per_1l_air } = req.body;
 
     try {
@@ -27,4 +33,4 @@ router.post('/', validateRequest(pmsSchema), async (req, res) => {
     }
 });
 
-export default router; 
+export default router;
