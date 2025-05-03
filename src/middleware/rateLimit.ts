@@ -1,6 +1,11 @@
 import rateLimit from 'express-rate-limit';
 
-export const config = {
+interface RateLimitConfig {
+    windowMs: number;
+    max: number;
+}
+
+export const config: RateLimitConfig = {
     windowMs: 60 * 1000, // 1 minute window
     max: 70 // 70 requests per minute
 };

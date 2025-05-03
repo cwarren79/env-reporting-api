@@ -1,7 +1,10 @@
-import { InfluxDB, FieldType } from 'influx';
+import { InfluxDB, FieldType, ISchemaOptions } from 'influx';
 import { config } from './env.js';
 
-const schema = [
+// We use ISchemaOptions directly since tag validation is handled by Zod schemas
+// See: src/schemas/sensors.ts for the validation logic
+// Note: Zod ensures that sensor_id is properly formatted (starts with 'sensor:')
+const schema: ISchemaOptions[] = [
     {
         measurement: 'temperature',
         fields: {
@@ -39,15 +42,24 @@ const schema = [
     }
 ];
 
-const influxDB = new InfluxDB({
+interface InfluxConfig {
+    host: string;
+    port: number;
+    database: string;
+    schema: ISchemaOptions[];
+}
+
+export const influxConfig: InfluxConfig = {
     host: config.database.host,
     port: config.database.port,
     database: config.database.name,
     schema
-});
+};
+
+const influxDB = new InfluxDB(influxConfig);
 
 // Database initialization
-const initializeDatabase = async () => {
+const initializeDatabase = async (): Promise<void> => {
     try {
         const names = await influxDB.getDatabaseNames();
         if (!names.includes(config.database.name)) {

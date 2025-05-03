@@ -2,28 +2,36 @@
   "name": "env_reporting_api",
   "version": "0.0.1",
   "description": "An API for reporting environment (temperature / humidity) stats from remote sensors",
-  "main": "server.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "test": "docker compose -f docker-compose.test.yml up -d && sleep 1 && npx mocha \"src/**/*.test.js\" --recursive && docker compose -f docker-compose.test.yml down",
-    "start": "npx babel-node src/start-server.js"
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "start": "node dist/start-server.js",
+    "start:dev": "npx tsx src/start-server.ts",
+    "test": "docker compose -f docker-compose.test.yml up -d && sleep 1 && npx tsx node_modules/mocha/bin/mocha 'src/**/*.test.ts' --recursive --timeout 5000 --exit && docker compose -f docker-compose.test.yml down",
+    "clean": "rm -rf dist"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "influx": "^5.9.3",
-    "zod": "^3.22.4",
-    "express-rate-limit": "^7.1.5"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@babel/cli": "^7.23.4",
-    "@babel/core": "^7.23.5",
-    "@babel/node": "^7.22.19",
-    "@babel/preset-env": "^7.23.5",
-    "@babel/register": "^7.22.15",
+    "@types/chai": "^5.2.1",
+    "@types/express": "^5.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.15.2",
+    "@types/sinon": "^17.0.4",
+    "@types/supertest": "^6.0.3",
+    "chai": "^4.5.0",
     "mocha": "^10.2.0",
+    "sinon": "^20.0.0",
     "supertest": "^6.3.3",
-    "chai": "^4.5.0"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

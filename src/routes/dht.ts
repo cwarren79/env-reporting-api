@@ -1,12 +1,18 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { influxDB } from '../config/database.js';
 import { sendError, writeToInflux, extractSensorTag } from '../utils/helpers.js';
 import { validateRequest } from '../middleware/validateRequest.js';
-import { dhtSchema } from '../schemas/sensors.js';
+import { dhtSchema, DHTSensor } from '../schemas/sensors.js';
 
 const router = express.Router();
 
-router.post('/', validateRequest(dhtSchema), async (req, res) => {
+interface DHTResponse {
+    temperature?: number;
+    humidity?: number;
+    sensor_id: string;
+}
+
+router.post('/', validateRequest(dhtSchema), async (req: Request<{}, {}, DHTSensor>, res: Response<DHTResponse | { error: string }>) => {
     const { tags, temperature, humidity } = req.body;
 
     try {
@@ -27,4 +33,4 @@ router.post('/', validateRequest(dhtSchema), async (req, res) => {
     }
 });
 
-export default router; 
+export default router;

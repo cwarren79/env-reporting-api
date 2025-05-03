@@ -1,6 +1,7 @@
 import { startServer } from './server.js';
+import { Server } from 'http';
 
-const handleShutdown = (server) => {
+const handleShutdown = (server: Server): void => {
   console.log('\nReceived shutdown signal. Starting graceful shutdown...');
   server.close(() => {
     console.log('Server closed');
@@ -9,12 +10,12 @@ const handleShutdown = (server) => {
 };
 
 startServer()
-  .then(server => {
+  .then((server: Server) => {
     // Handle graceful shutdown
     process.on('SIGTERM', () => handleShutdown(server));
     process.on('SIGINT', () => handleShutdown(server));
   })
-  .catch(error => {
+  .catch((error: Error) => {
     console.error('Failed to start server:', error);
     process.exit(1);
   });
