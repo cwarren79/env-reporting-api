@@ -13,6 +13,7 @@ import pmsRouter from './routes/pms.js';
 const app: Express = express();
 
 app.use(express.json());
+app.set('trust proxy', 1)
 
 // Apply routes
 app.use('/health', healthRouter);
