@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { influxDB, initializeDatabase, influxConfig } from './database.js';
 import { config } from './env.js';
+import logger from './logger.js';
 
 describe('Database Configuration', () => {
     let sandbox: sinon.SinonSandbox;
@@ -44,11 +45,13 @@ describe('Database Configuration', () => {
                 .resolves(['other_db']);
             const createDatabaseStub = sandbox.stub(influxDB, 'createDatabase')
                 .resolves();
+            const loggerInfoStub = sandbox.stub(logger, 'info');
 
             await initializeDatabase();
 
             sinon.assert.calledOnce(getDatabaseNamesStub);
             sinon.assert.calledWith(createDatabaseStub, config.database.name);
+            sinon.assert.calledWith(loggerInfoStub, sinon.match('Database initialized successfully'));
         });
 
         it('should not create database if it already exists', async () => {
@@ -56,27 +59,27 @@ describe('Database Configuration', () => {
                 .resolves([config.database.name]);
             const createDatabaseStub = sandbox.stub(influxDB, 'createDatabase')
                 .resolves();
+            const loggerInfoStub = sandbox.stub(logger, 'info');
 
             await initializeDatabase();
 
             sinon.assert.calledOnce(getDatabaseNamesStub);
             sinon.assert.notCalled(createDatabaseStub);
+            sinon.assert.calledWith(loggerInfoStub, sinon.match('Database initialized successfully'));
         });
 
         it('should handle initialization errors', async () => {
-            const consoleErrorStub = sandbox.stub(console, 'error');
+            const loggerErrorStub = sandbox.stub(logger, 'error');
             const processExitStub = sandbox.stub(process, 'exit');
+            const error = new Error('Connection failed');
 
             sandbox.stub(influxDB, 'getDatabaseNames')
-                .rejects(new Error('Connection failed'));
+                .rejects(error);
 
             await initializeDatabase();
 
-            sinon.assert.calledWith(consoleErrorStub,
-                'Failed to initialize database:',
-                sinon.match.instanceOf(Error)
-            );
+            sinon.assert.calledWith(loggerErrorStub, sinon.match('Failed to initialize database'));
             sinon.assert.calledWith(processExitStub, 1);
         });
     });
-}); 
+});

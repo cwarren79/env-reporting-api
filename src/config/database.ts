@@ -1,5 +1,6 @@
 import { InfluxDB, FieldType, ISchemaOptions } from 'influx';
 import { config } from './env.js';
+import logger from './logger.js';
 
 // We use ISchemaOptions directly since tag validation is handled by Zod schemas
 // See: src/schemas/sensors.ts for the validation logic
@@ -65,9 +66,9 @@ const initializeDatabase = async (): Promise<void> => {
         if (!names.includes(config.database.name)) {
             await influxDB.createDatabase(config.database.name);
         }
-        console.log('Database initialized successfully');
+        logger.info('Database initialized successfully');
     } catch (error) {
-        console.error('Failed to initialize database:', error);
+        logger.error('Failed to initialize database', { error });
         process.exit(1);
     }
 };
